@@ -9,32 +9,37 @@ const config = require('./config')
 const movies = require('./movies')
 
 const app = express()
-const client = redis.createClient();
+const client = redis.createClient()
 
 app.use(express.static('public'))
 app.use(cors())
-
-// Redis connect
-client.on("connect", () => {
-  console.log("Redis is connected ");
-});
 
 //
 app.get('/search', (req, res) => {
   const { keyword } = req.query;
   // check in redis if query exists
-  client.get(keyword, (error, cachedList) => {
+
+  client.get(keyword, (error, cached) => {
     if (error) { throw error; }
 
-    if (cachedList) {
-      res.send(cachedList)
+    if (cached) {
+      console.log('Served from cache', keyword);
+      res.send(cached)
+
+      client.ttl(keyword, (err, ttl) => console.log('ttl is:', ttl, keyword))
+
+      // check if the last cache is older than 3 secs
+      if (Date.now() - JSON.parse(cached).lastQueriedTime > 3000) {
+        // refresh cashed for this keyword
+        console.log('Cache been refreshed for', keyword);
+      }
+
     } else {
       movies.query(keyword)
       .then(
         (data) => {
-          // results expire from redis in 30 seconds
-          client.set(keyword, JSON.stringify(data), 'EX', 30, () => console.log('save this data indefinitely'));
-          //
+          // set keyword with 30 sec to expire
+          client.setex(keyword, 30, JSON.stringify(data), () => console.log('New cache for:', keyword));
           res.send(data)
         },
         (error) => {
@@ -48,6 +53,11 @@ app.get('/search', (req, res) => {
   });
 
 })
+
+
+app.get('/cache/refresh', (req, res) => {
+
+});
 
 app.listen(config.port, () => {
   console.log('Server listening on port %s, Ctrl+C to stop', config.port)

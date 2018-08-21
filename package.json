@@ -13,6 +13,7 @@
     "dotenv": "^4.0.0",
     "express": "^4.15.2",
     "ipware": "^1.0.0",
+    "json-http": "^1.0.2",
     "node-fetch": "^2.2.0",
     "omdb-client": "^2.0.0",
     "redis": "^2.8.0"
