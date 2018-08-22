@@ -14,43 +14,44 @@ const client = redis.createClient()
 app.use(express.static('public'))
 app.use(cors())
 
-//
+// GET /search?keyword=[some term(s)]
 app.get('/search', (req, res) => {
   const { keyword } = req.query;
-  // check in redis if query exists
 
-  client.get(keyword, (error, cached) => {
+  client.get(keyword, async (error, cached) => {
     if (error) { throw error; }
 
     if (cached) {
-      console.log('Served from cache', keyword);
+      console.log('Served from cache:', keyword);
       res.send(cached)
 
-      client.ttl(keyword, (err, ttl) => console.log('ttl is:', ttl, keyword))
-
-      // check if the last cache is older than 3 secs
-      if (Date.now() - JSON.parse(cached).lastQueriedTime > 3000) {
-        // refresh cashed for this keyword
-        console.log('Cache been refreshed for', keyword);
+      // check if cached is older than 10 secs to refresh it
+      if (Date.now() - JSON.parse(cached).lastQueriedTime > 10 * 1000) {
+        try {
+          const data = await movies.query(keyword);
+          client.del(keyword, (err) => {
+            !err && client.set(keyword, JSON.stringify(data), () => console.log('Refreshed cache for:', keyword));
+          })
+        } catch (error) {
+          console.error(error)
+        }
       }
 
     } else {
-      movies.query(keyword)
-      .then(
-        (data) => {
-          // set keyword with 30 sec to expire
-          client.setex(keyword, 30, JSON.stringify(data), () => console.log('New cache for:', keyword));
-          res.send(data)
-        },
-        (error) => {
-          console.error(error)
-          res.status(500).send({
-            error: 'There was an error.'
-          })
-        }
-      )
+      try {
+        const data = await movies.query(keyword);
+        client.set(keyword, JSON.stringify(data), (err) => {
+          !err & res.send(data)
+          console.log('New cache for:', keyword)
+        });
+      } catch (error) {
+        console.error(error)
+        res.status(500).send({
+          error: 'There was an error.'
+        })
+      }
     }
-  });
+  }); // client.get
 
 })
 
