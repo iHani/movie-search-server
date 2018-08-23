@@ -1,4 +1,3 @@
-// const fetch = require('node-fetch');
 const omdbApi = require('./OMDBAPI');
 
 const API_KEY = 'a7d39165';
