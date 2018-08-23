@@ -1,7 +1,6 @@
 const omdbApi = require('./OMDBAPI');
 
-const API_KEY = 'a7d39165';
-const api = `http://www.omdbapi.com/`;
+const API_KEY = process.env.REACT_APP_MODB_TOKEN;
 
 const headers = {
   'Accept': 'application/json',
@@ -18,7 +17,7 @@ async function query (query) {
     response.lastQueriedTime = Date.now();
     return response;
   } catch (error) {
-    throw error
+    return ({ Response: false, error: 'No response from omdbapi.com' })
   }
 }
 
