@@ -6,6 +6,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
+.env.REACT_APP_MODB_TOKEN
 
 npm-debug.log*
 yarn-debug.log*
