@@ -25,8 +25,8 @@ app.get('/search', (req, res) => {
       res.send(cached);
       console.log('Served from cache:', keyword);
 
-      // check if cached is older than 10 secs to refresh it
-      if (Date.now() - JSON.parse(cached).lastQueriedTime > 10 * 1000) {
+      // check if cached is older than 60 secs to refresh it
+      if (Date.now() - JSON.parse(cached).lastQueriedTime > 60 * 1000) {
         try {
           const result = await movies.query(keyword);
           client.hset(`keyword`, keyword, JSON.stringify(result), () => {
@@ -51,7 +51,7 @@ app.get('/search', (req, res) => {
         });
       }
     }
-  }); // client.get
+  });
 
 })
 

@@ -1,6 +1,6 @@
 const omdbApi = require('./OMDBAPI');
 
-// const API_KEY = process.env.REACT_APP_MODB_TOKEN;
+const apiKey = process.env.REACT_APP_MODB_TOKEN;
 
 const headers = {
   'Accept': 'application/json',
@@ -23,7 +23,7 @@ async function query (query) {
 
 function searchOMDB (query, page = 1) {
   return new Promise((res, rej) => {
-    omdbApi.search({ apiKey: process.env.REACT_APP_MODB_TOKEN, query, page }, (err, data) => {
+    omdbApi.search({ apiKey, query, page }, (err, data) => {
       if (err) { rej(err); }
       res(data);
     });
